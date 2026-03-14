@@ -61,3 +61,5 @@ I fixed this by storing the game information in session state and resetting it w
 Next time I work with AI on a coding task, I would review the AI’s changes more carefully before accepting them. In this project I learned that AI can suggest good fixes, but sometimes the suggestions are incomplete or don’t work with my setup, so I need to check the code and test it myself.
 
 This project changed how I think about AI-generated code because I realized AI is more like a pair programmer than an automatic solution. It can help find bugs and suggest ideas, but I still have to test the code, verify the results, and decide which suggestions to accept or reject.
+
+There were times where i got too reliant on AI suggestions and stopped understanding what is going on. I understood that it is really important not to rush and take time to understand the code and suggestions before applying them. 
