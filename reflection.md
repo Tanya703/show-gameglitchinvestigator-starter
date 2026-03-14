@@ -22,7 +22,9 @@ In Hard difficulty, the attempts left became -4 after only one attempt.
 - Give one example of an AI suggestion that was correct (including what the AI suggested and how you verified the result).
 - Give one example of an AI suggestion that was incorrect or misleading (including what the AI suggested and how you verified the result).
 
-I used Claude Code as my AI assistant throughout this project. Claude correctly identified that the root cause of multiple bugs — wrong hints, negative attempt counts, and wrong secret ranges — was the session state never resetting when difficulty changed; I verified this by switching from Normal to Hard mid-game and confirming the attempt counter and secret both reset properly after the fix. One area where I had to push back was around the `st.rerun()` call: Claude's initial fix used `st.rerun()`, which is only available in Streamlit 1.27+, but my environment was running 1.22, so the app crashed with an AttributeError until I pointed out the error and Claude corrected it to `st.experimental_rerun()`.
+I used Claude Code as my AI assistant while working on this project. One suggestion that helped was when it pointed out that some of the game problems were happening because the game state wasn’t resetting when the difficulty changed. After fixing that, I tested it by switching difficulties and starting a new game, and the attempts and secret number reset correctly.
+
+One suggestion that didn’t work at first was using st.rerun(). When I tried it, the app crashed because my version of Streamlit didn’t support that function. After I noticed the error, I told Claude and it suggested a different fix that worked.
 
 ## 3. Debugging and testing your fixes
 
@@ -31,7 +33,11 @@ I used Claude Code as my AI assistant throughout this project. Claude correctly 
   and what it showed you about your code.
 - Did AI help you design or understand any tests? How?
 
-I decided a bug was fixed when it no longer reproduced under the same conditions that originally triggered it — for example, switching difficulty mid-game and confirming attempts reset to zero, or entering blank input and confirming the attempt counter did not increment. I ran the full pytest suite (`pytest tests/test_game_logic.py -v`), which covered 17 tests including ones specifically targeting each bug, and all passed. Claude Code helped design the tests by suggesting which function signatures to call and what edge cases mattered most — for instance, it added `test_too_high_even_attempt_deducts_points` specifically to catch the even-attempt +5 scoring bug that could otherwise be missed by only testing odd attempts.
+I decided a bug was fixed when I tried the same thing that caused the bug before and it didn’t happen again. For example, I switched the difficulty during the game and checked that the attempts reset correctly.
+
+I also tried running pytest to check the game logic. The tests checked different parts of the game, like guesses, score updates, and difficulty ranges. When all the tests passed, it helped confirm that the logic was working the way it should.
+
+AI helped suggest some of the tests and what kinds of cases to check, like making sure the scoring works correctly depending on the attempt number.
 
 ## 4. What did you learn about Streamlit and state?
 
@@ -39,7 +45,11 @@ I decided a bug was fixed when it no longer reproduced under the same conditions
 - How would you explain Streamlit "reruns" and session state to a friend who has never used Streamlit?
 - What change did you make that finally gave the game a stable secret number?
 
-The secret kept appearing to change because the original code only initialized `st.session_state.secret` once, but switching difficulty silently reused the old secret from a different range — so the displayed range and the actual secret were out of sync, making hints look wrong even though the underlying logic was correct. Streamlit reruns mean every time a user interacts with a widget (clicks a button, types in a box, changes a dropdown), the entire Python script runs from top to bottom again — so any variable not stored in `session_state` is recalculated fresh each time, as if the script just started. I fixed the stable secret problem by storing the active difficulty in `session_state` and comparing it on every rerun; when it changes, all game state — including the secret — gets reset to match the new difficulty range.
+The secret number seemed like it was changing because the game didn’t properly reset when the difficulty changed. That meant the range shown to the player didn’t always match the actual secret number.
+
+In Streamlit, the script runs again every time the user interacts with something, like clicking a button or entering text. If values aren’t stored in session state, they get recreated every time the app reruns.
+
+I fixed this by storing the game information in session state and resetting it when the difficulty changes, so the secret number stays consistent for the game.
 
 ## 5. Looking ahead: your developer habits
 
@@ -48,4 +58,6 @@ The secret kept appearing to change because the original code only initialized `
 - What is one thing you would do differently next time you work with AI on a coding task?
 - In one or two sentences, describe how this project changed the way you think about AI generated code.
 
-The habit I want to carry forward is separating pure logic from UI code from the start — having `logic_utils.py` made the game logic independently testable without needing to run the Streamlit app at all, which made debugging much faster. Next time I work with AI on a coding task I would check the library versions in my environment before accepting any fix, since this project showed that AI suggestions can be correct in principle but wrong for a specific version (the `st.rerun()` issue). This project changed how I think about AI-generated code by showing me that AI is good at spotting patterns across the whole codebase but can miss environment-specific constraints — so I need to be the one who tests in the actual runtime, not just reads the code.
+Next time I work with AI on a coding task, I would review the AI’s changes more carefully before accepting them. In this project I learned that AI can suggest good fixes, but sometimes the suggestions are incomplete or don’t work with my setup, so I need to check the code and test it myself.
+
+This project changed how I think about AI-generated code because I realized AI is more like a pair programmer than an automatic solution. It can help find bugs and suggest ideas, but I still have to test the code, verify the results, and decide which suggestions to accept or reject.
